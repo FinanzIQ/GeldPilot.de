@@ -92,7 +92,103 @@
   });
 })();
 
-/* ---------- 5. Kategorie-Filter (nur auf der Startseite) ---------- */
+/* ---------- 6. Artikel-Erweiterungen: TOC, Ähnliche Artikel, Quellen, FAQ, Teilen ---------- */
+(function articleEnhancements() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const main = document.querySelector('main');
+    const nav = document.querySelector('.article-nav');
+    if (!main || !nav || typeof SEARCH_INDEX === 'undefined') return;
+
+    const currentFile = location.pathname.split('/').pop() || 'index.html';
+    const currentEntry = SEARCH_INDEX.find(i => i.url === currentFile);
+
+    /* --- Tabelle: Inhaltsverzeichnis --- */
+    const headings = Array.from(main.querySelectorAll('h2'));
+    if (headings.length >= 3) {
+      const toc = document.createElement('nav');
+      toc.className = 'toc';
+      toc.innerHTML = '<span class="label">Inhalt</span>';
+      const list = document.createElement('ol');
+      headings.forEach((h, i) => {
+        const id = 'sec-' + i;
+        h.id = id;
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="#${id}">${h.textContent}</a>`;
+        list.appendChild(li);
+      });
+      toc.appendChild(list);
+      const routeDiv = main.querySelector('.route');
+      if (routeDiv) routeDiv.after(toc); else main.prepend(toc);
+    }
+
+    /* --- Teilen-Buttons --- */
+    if (currentEntry) {
+      const url = encodeURIComponent(location.href);
+      const title = encodeURIComponent(currentEntry.title);
+      const share = document.createElement('div');
+      share.className = 'share-row';
+      share.innerHTML = `
+        <span class="label">Teilen</span>
+        <a href="https://wa.me/?text=${title}%20${url}" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://twitter.com/intent/tweet?text=${title}&url=${url}" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url=${url}" target="_blank" rel="noopener">LinkedIn</a>
+      `;
+      nav.after(share);
+
+      /* --- Ähnliche Artikel --- */
+      const related = SEARCH_INDEX.filter(i => i.cat === currentEntry.cat && i.url !== currentFile).slice(0, 3);
+      if (related.length > 0) {
+        const relSection = document.createElement('section');
+        relSection.className = 'related-section';
+        relSection.innerHTML = '<span class="label">Ähnliche Artikel</span><div class="related-grid"></div>';
+        const grid = relSection.querySelector('.related-grid');
+        related.forEach(r => {
+          grid.innerHTML += `<a class="related-card" href="${r.url}"><span class="label">${r.cat}</span><strong>${r.title}</strong></a>`;
+        });
+        share.after(relSection);
+      }
+
+      /* --- Quellen --- */
+      if (typeof SOURCE_LINKS !== 'undefined' && SOURCE_LINKS[currentEntry.cat]) {
+        const src = document.createElement('div');
+        src.className = 'sources-box';
+        src.innerHTML = '<span class="label">Quellen &amp; weiterführende Links</span><ul>' +
+          SOURCE_LINKS[currentEntry.cat].map(([name, link]) => `<li><a href="${link}" target="_blank" rel="noopener nofollow">${name}</a></li>`).join('') +
+          '</ul>';
+        const disclaimer = main.querySelector('.article-disclaimer');
+        if (disclaimer) disclaimer.after(src); else main.appendChild(src);
+      }
+
+      /* --- FAQ --- */
+      if (typeof FAQ_DATA !== 'undefined' && FAQ_DATA[currentFile]) {
+        const faqItems = FAQ_DATA[currentFile];
+        const faqSection = document.createElement('section');
+        faqSection.className = 'faq-section';
+        faqSection.innerHTML = '<h2>Häufige Fragen</h2>' + faqItems.map(item => `
+          <details class="faq-item">
+            <summary>${item.q}</summary>
+            <p>${item.a}</p>
+          </details>
+        `).join('');
+        nav.before(faqSection);
+
+        const faqSchema = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": faqItems.map(item => ({
+            "@type": "Question",
+            "name": item.q,
+            "acceptedAnswer": { "@type": "Answer", "text": item.a }
+          }))
+        };
+        const schemaScript = document.createElement('script');
+        schemaScript.type = 'application/ld+json';
+        schemaScript.textContent = JSON.stringify(faqSchema);
+        document.head.appendChild(schemaScript);
+      }
+    }
+  });
+})();
 (function categoryFilter() {
   document.addEventListener('DOMContentLoaded', () => {
     const grid = document.querySelector('.card-grid');
