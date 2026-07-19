@@ -16,6 +16,13 @@
       <a href="ueber-uns.html">Über uns</a>
       <a href="kontakt.html">Kontakt</a>
     </nav>
+    <div class="site-search">
+      <button class="search-toggle" aria-label="Suche öffnen" onclick="toggleSearch()">&#128269;</button>
+      <div class="search-box" id="searchBox">
+        <input type="text" id="searchInput" placeholder="Artikel durchsuchen…" oninput="runSearch(this.value)" autocomplete="off">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -47,5 +54,7 @@
   <p class="copyright">© 2026 GeldPilot.de</p>
 </footer>
 
+<script src="search-data.js"></script>
+<script src="search.js"></script>
 </body>
 </html>
