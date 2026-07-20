@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finanzrechner: Budget & Zinseszins — GeldPilot.de</title>
-<meta name="description" content="Kostenlose interaktive Rechner: 50-30-20-Budgetrechner und Zinseszinsrechner für deine Geldanlage.">
+<meta name="description" content="Kostenlose interaktive Rechner: 50-30-20-Budgetrechner, Zinseszinsrechner und Kreditrechner.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Finanzrechner: Budget & Zinseszins — GeldPilot.de">
-<meta property="og:description" content="Kostenlose interaktive Rechner: 50-30-20-Budgetrechner und Zinseszinsrechner für deine Geldanlage.">
+<meta property="og:description" content="Kostenlose interaktive Rechner: 50-30-20-Budgetrechner, Zinseszinsrechner und Kreditrechner.">
 <meta property="og:url" content="https://finanziq.github.io/GeldPilot.de/rechner.html">
 <meta property="og:locale" content="de_DE">
 <link rel="canonical" href="https://finanziq.github.io/GeldPilot.de/rechner.html">
@@ -97,7 +97,31 @@
     </div>
   </div>
 
-  <p class="article-disclaimer" style="margin-top:0;">Diese Rechner dienen ausschließlich zur groben Orientierung und stellen keine Anlage- oder Steuerberatung dar. Reale Kapitalmarktrenditen schwanken und sind nicht garantiert.</p>
+  <h2>Kreditrechner</h2>
+  <p>Berechne die ungefähre monatliche Rate eines Kredits, etwa im Vergleich zwischen <a href="dispo-vs-ratenkredit.html">Dispokredit und Ratenkredit</a>.</p>
+  <div class="calc-box">
+    <div class="calc-row">
+      <div class="calc-field">
+        <label for="loanAmount">Kreditsumme (€)</label>
+        <input type="number" id="loanAmount" placeholder="z. B. 10000" oninput="calcLoan()">
+      </div>
+      <div class="calc-field">
+        <label for="loanRate">Effektiver Jahreszins (%)</label>
+        <input type="number" id="loanRate" placeholder="z. B. 6.5" oninput="calcLoan()">
+      </div>
+      <div class="calc-field">
+        <label for="loanYears">Laufzeit (Jahre)</label>
+        <input type="number" id="loanYears" placeholder="z. B. 5" oninput="calcLoan()">
+      </div>
+    </div>
+    <div class="calc-result" id="loanResult" style="display:none;">
+      <p class="calc-highlight" id="rMonthlyRate">–</p>
+      <div class="calc-result-row"><span>Gesamtkosten des Kredits</span><strong id="rTotalCost">–</strong></div>
+      <div class="calc-result-row"><span>Davon Zinsen</span><strong id="rTotalInterest">–</strong></div>
+    </div>
+  </div>
+
+  <p class="article-disclaimer" style="margin-top:0;">Diese Rechner dienen ausschließlich zur groben Orientierung und stellen keine Anlage-, Kredit- oder Steuerberatung dar. Reale Kapitalmarktrenditen und Kreditkonditionen schwanken und sind nicht garantiert.</p>
 </main>
 
 <footer class="site">
@@ -141,6 +165,32 @@ function calcCompound() {
   document.getElementById('rFinal').textContent = formatEuro(balance);
   document.getElementById('rPaidIn').textContent = formatEuro(paidIn);
   document.getElementById('rGain').textContent = formatEuro(gain);
+}function calcLoan() {
+  const amount = parseFloat(document.getElementById('loanAmount').value);
+  const rate = parseFloat(document.getElementById('loanRate').value);
+  const years = parseFloat(document.getElementById('loanYears').value);
+  const box = document.getElementById('loanResult');
+
+  if (!amount || amount <= 0 || !rate || rate < 0 || !years || years <= 0) {
+    box.style.display = 'none';
+    return;
+  }
+
+  const monthlyRate = rate / 100 / 12;
+  const months = years * 12;
+  let payment;
+  if (monthlyRate === 0) {
+    payment = amount / months;
+  } else {
+    payment = amount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
+  }
+  const totalCost = payment * months;
+  const totalInterest = totalCost - amount;
+
+  box.style.display = 'block';
+  document.getElementById('rMonthlyRate').textContent = formatEuro(payment) + ' / Monat';
+  document.getElementById('rTotalCost').textContent = formatEuro(totalCost);
+  document.getElementById('rTotalInterest').textContent = formatEuro(totalInterest);
 }
 </script>
 <script src="search-data.js"></script>
